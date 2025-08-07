@@ -1,8 +1,12 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import { Star, MapPin, CheckCircle, Edit, Settings, LogOut, FileText, MessageSquare } from "lucide-react";
+import { Star, MapPin, CheckCircle, Edit, Settings, LogOut, FileText, MessageSquare, X, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 
 // Données mockées du client (en réalité, cela viendrait de l'API)
 const clientData = {
@@ -57,6 +61,95 @@ const clientData = {
 export default function Profile() {
   const { t } = useLanguage();
   const [, setLocation] = useLocation();
+  
+  // États pour les modals
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
+  const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  
+  // États pour le formulaire de sécurité
+  const [securityForm, setSecurityForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: ""
+  });
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [securityError, setSecurityError] = useState("");
+  const [securitySuccess, setSecuritySuccess] = useState("");
+  
+  // États pour les notifications
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    pushNotifications: true,
+    smsNotifications: false
+  });
+  const [notificationSuccess, setNotificationSuccess] = useState("");
+
+  // Gestion du formulaire de sécurité
+  const handleSecuritySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSecurityError("");
+    setSecuritySuccess("");
+
+    // Validation
+    if (!securityForm.currentPassword || !securityForm.newPassword || !securityForm.confirmPassword) {
+      setSecurityError("Tous les champs sont requis");
+      return;
+    }
+
+    if (securityForm.newPassword !== securityForm.confirmPassword) {
+      setSecurityError("Les mots de passe ne correspondent pas");
+      return;
+    }
+
+    if (securityForm.newPassword.length < 8) {
+      setSecurityError("Le nouveau mot de passe doit contenir au moins 8 caractères");
+      return;
+    }
+
+    // Simulation de l'API
+    try {
+      // Ici vous appelleriez votre API réelle
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setSecuritySuccess("Mot de passe modifié avec succès !");
+      setSecurityForm({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: ""
+      });
+      
+      // Fermer le modal après 2 secondes
+      setTimeout(() => {
+        setShowSecurityModal(false);
+        setSecuritySuccess("");
+      }, 2000);
+    } catch (error) {
+      setSecurityError("Erreur lors de la modification du mot de passe");
+    }
+  };
+
+  // Gestion des notifications
+  const handleNotificationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNotificationSuccess("");
+
+    try {
+      // Simulation de l'API
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setNotificationSuccess("Préférences enregistrées avec succès !");
+      
+      // Fermer le modal après 2 secondes
+      setTimeout(() => {
+        setShowNotificationsModal(false);
+        setNotificationSuccess("");
+      }, 2000);
+    } catch (error) {
+      setNotificationSuccess("Erreur lors de l'enregistrement des préférences");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
@@ -211,20 +304,14 @@ export default function Profile() {
             <div className="space-y-4">
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div>
-                  <h4 className="font-medium text-gray-900">Informations personnelles</h4>
-                  <p className="text-sm text-gray-600">Nom, email, téléphone</p>
-                </div>
-                <Button variant="outline" size="sm">
-                  Modifier
-                </Button>
-              </div>
-              
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
                   <h4 className="font-medium text-gray-900">Sécurité</h4>
                   <p className="text-sm text-gray-600">Mot de passe, authentification</p>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowSecurityModal(true)}
+                >
                   Modifier
                 </Button>
               </div>
@@ -234,7 +321,11 @@ export default function Profile() {
                   <h4 className="font-medium text-gray-900">Notifications</h4>
                   <p className="text-sm text-gray-600">Préférences de notification</p>
                 </div>
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setShowNotificationsModal(true)}
+                >
                   Configurer
                 </Button>
               </div>
@@ -253,6 +344,205 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      {/* Modal Sécurité */}
+      {showSecurityModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Modifier le mot de passe</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSecurityModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <form onSubmit={handleSecuritySubmit} className="space-y-4">
+                <div>
+                  <Label htmlFor="currentPassword">Ancien mot de passe</Label>
+                  <div className="relative">
+                    <Input
+                      id="currentPassword"
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={securityForm.currentPassword}
+                      onChange={(e) => setSecurityForm({...securityForm, currentPassword: e.target.value})}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+                  <div className="relative">
+                    <Input
+                      id="newPassword"
+                      type={showNewPassword ? "text" : "password"}
+                      value={securityForm.newPassword}
+                      onChange={(e) => setSecurityForm({...securityForm, newPassword: e.target.value})}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={securityForm.confirmPassword}
+                      onChange={(e) => setSecurityForm({...securityForm, confirmPassword: e.target.value})}
+                      className="pr-10"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+
+                {securityError && (
+                  <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                    {securityError}
+                  </div>
+                )}
+
+                {securitySuccess && (
+                  <div className="text-green-600 text-sm bg-green-50 p-3 rounded-lg">
+                    {securitySuccess}
+                  </div>
+                )}
+
+                <div className="flex space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowSecurityModal(false)}
+                    className="flex-1"
+                  >
+                    Annuler
+                  </Button>
+                  <Button type="submit" className="flex-1">
+                    Valider
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Notifications */}
+      {showNotificationsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Configurer les notifications</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowNotificationsModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <form onSubmit={handleNotificationSubmit} className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Notifications par email</Label>
+                      <p className="text-sm text-gray-600">Recevoir les notifications par email</p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.emailNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({...notificationSettings, emailNotifications: checked})
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Notifications push</Label>
+                      <p className="text-sm text-gray-600">Recevoir les notifications push</p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.pushNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({...notificationSettings, pushNotifications: checked})
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-medium">Notifications SMS</Label>
+                      <p className="text-sm text-gray-600">Recevoir les notifications par SMS</p>
+                    </div>
+                    <Switch
+                      checked={notificationSettings.smsNotifications}
+                      onCheckedChange={(checked) => 
+                        setNotificationSettings({...notificationSettings, smsNotifications: checked})
+                      }
+                    />
+                  </div>
+                </div>
+
+                {notificationSuccess && (
+                  <div className="text-green-600 text-sm bg-green-50 p-3 rounded-lg">
+                    {notificationSuccess}
+                  </div>
+                )}
+
+                <div className="flex space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowNotificationsModal(false)}
+                    className="flex-1"
+                  >
+                    Annuler
+                  </Button>
+                  <Button type="submit" className="flex-1">
+                    Enregistrer
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

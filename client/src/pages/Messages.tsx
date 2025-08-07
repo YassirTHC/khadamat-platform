@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocation } from "wouter";
 import { 
   MessageCircle, 
   Send, 
@@ -60,6 +61,7 @@ interface Conversation {
 
 export default function Messages() {
   const { t } = useLanguage();
+  const [location, setLocation] = useLocation();
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -68,7 +70,7 @@ export default function Messages() {
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   // Données mockées des conversations
-  const [conversations] = useState<Conversation[]>([
+  const [conversations, setConversations] = useState<Conversation[]>([
     {
       id: "1",
       providerId: "provider1",
@@ -136,6 +138,58 @@ export default function Messages() {
       }
     ]
   });
+
+  // Fonction pour créer une nouvelle conversation
+  const createNewConversation = (conversationId: string, otherUserId: string, reservationId?: string) => {
+    // Simulation de création d'une nouvelle conversation
+    const newConversation: Conversation = {
+      id: conversationId,
+      providerId: otherUserId,
+      providerName: `Utilisateur ${otherUserId}`, // En réalité, on récupérerait le nom depuis l'API
+      providerAvatar: undefined,
+      lastMessage: "Nouvelle conversation",
+      lastMessageTime: new Date(),
+      unreadCount: 0,
+      isActive: true,
+      missionStatus: 'active',
+      missionTitle: reservationId ? `Réservation ${reservationId}` : "Nouvelle mission"
+    };
+
+    setConversations(prev => {
+      // Vérifier si la conversation existe déjà
+      const exists = prev.find(conv => conv.id === conversationId);
+      if (!exists) {
+        return [...prev, newConversation];
+      }
+      return prev;
+    });
+
+    return newConversation;
+  };
+
+  // Gérer les paramètres d'URL pour ouvrir directement une conversation
+  useEffect(() => {
+    const pathParts = location.split('/');
+    if (pathParts.length > 2 && pathParts[1] === 'messages') {
+      const conversationId = pathParts[2];
+      
+      // Extraire les paramètres de l'URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const otherUserId = urlParams.get('otherUser');
+      const reservationId = urlParams.get('reservation');
+
+      // Vérifier si la conversation existe
+      const existingConversation = conversations.find(conv => conv.id === conversationId);
+      
+      if (!existingConversation && otherUserId) {
+        // Créer une nouvelle conversation
+        const newConversation = createNewConversation(conversationId, otherUserId, reservationId || undefined);
+        setSelectedConversation(newConversation.id);
+      } else if (existingConversation) {
+        setSelectedConversation(existingConversation.id);
+      }
+    }
+  }, [location, conversations]);
 
   const handleSendMessage = () => {
     if (newMessage.trim() && selectedConversation) {

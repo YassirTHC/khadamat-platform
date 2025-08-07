@@ -3,16 +3,30 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, MapPin, User, Star, MessageCircle, Eye } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Star, Eye } from "lucide-react";
+import ContactButton from "@/components/ui/ContactButton";
+
+// Hook pour détecter le rôle de l'utilisateur
+const useUserRole = () => {
+  // Simulation - à remplacer par votre logique d'authentification
+  // Vous pouvez passer ces props depuis le Header ou utiliser un contexte d'auth
+  const isClient = true; // ou false selon l'utilisateur connecté
+  const isPrestataire = false; // ou true selon l'utilisateur connecté
+  
+  return { isClient, isPrestataire };
+};
 
 export default function MesReservations() {
   const { t } = useLanguage();
   const [, setLocation] = useLocation();
+  const { isClient, isPrestataire } = useUserRole();
 
-  // Données mockées des réservations
+  // Données mockées des réservations avec IDs
   const reservations = [
     {
-      id: 1,
+      id: "1",
+      clientId: "client_001",
+      providerId: "provider_001",
       service: "Plomberie",
       provider: "Ahmed Ben Ali",
       date: "2024-01-15",
@@ -23,7 +37,9 @@ export default function MesReservations() {
       price: "300 DH"
     },
     {
-      id: 2,
+      id: "2",
+      clientId: "client_001",
+      providerId: "provider_002",
       service: "Électricité",
       provider: "Mohammed El Fassi",
       date: "2024-01-20",
@@ -34,7 +50,9 @@ export default function MesReservations() {
       price: "450 DH"
     },
     {
-      id: 3,
+      id: "3",
+      clientId: "client_001",
+      providerId: "provider_003",
       service: "Ménage",
       provider: "Fatima Zahra",
       date: "2024-01-18",
@@ -137,14 +155,14 @@ export default function MesReservations() {
                     {reservation.price}
                   </div>
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setLocation(`/messages/${reservation.provider}`)}
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Contacter
-                    </Button>
+                    <ContactButton
+                      reservationId={reservation.id}
+                      clientId={reservation.clientId}
+                      providerId={reservation.providerId}
+                      providerName={reservation.provider}
+                      isClient={isClient}
+                      isPrestataire={isPrestataire}
+                    />
                     <Button 
                       size="sm"
                       onClick={() => setLocation(`/reservations/${reservation.id}`)}

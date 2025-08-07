@@ -3,16 +3,30 @@ import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, Star, MapPin, Phone, MessageCircle, User, Crown } from "lucide-react";
+import { Heart, Star, MapPin, Phone, User, Crown } from "lucide-react";
+import ContactButton from "@/components/ui/ContactButton";
+
+// Hook pour détecter le rôle de l'utilisateur
+const useUserRole = () => {
+  // Simulation - à remplacer par votre logique d'authentification
+  // Vous pouvez passer ces props depuis le Header ou utiliser un contexte d'auth
+  const isClient = true; // ou false selon l'utilisateur connecté
+  const isPrestataire = false; // ou true selon l'utilisateur connecté
+  
+  return { isClient, isPrestataire };
+};
 
 export default function MesFavoris() {
   const { t } = useLanguage();
   const [, setLocation] = useLocation();
+  const { isClient, isPrestataire } = useUserRole();
 
-  // Données mockées des favoris
+  // Données mockées des favoris avec IDs
   const favorites = [
     {
-      id: 1,
+      id: "1",
+      clientId: "client_001", // ID de l'utilisateur connecté (client)
+      providerId: "provider_001",
       name: "Ahmed Ben Ali",
       service: "Plomberie",
       rating: 4.8,
@@ -25,7 +39,9 @@ export default function MesFavoris() {
       phone: "+212 6 12 34 56 78"
     },
     {
-      id: 2,
+      id: "2",
+      clientId: "client_001",
+      providerId: "provider_002",
       name: "Mohammed El Fassi",
       service: "Électricité",
       rating: 4.9,
@@ -38,7 +54,9 @@ export default function MesFavoris() {
       phone: "+212 6 98 76 54 32"
     },
     {
-      id: 3,
+      id: "3",
+      clientId: "client_001",
+      providerId: "provider_003",
       name: "Fatima Zahra",
       service: "Ménage",
       rating: 4.7,
@@ -169,15 +187,17 @@ export default function MesFavoris() {
                   )}
                   
                   <div className="flex gap-2 pt-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <ContactButton
+                      reservationId={`favorite_${favorite.id}`} // ID unique pour les favoris
+                      clientId={favorite.clientId}
+                      providerId={favorite.providerId}
+                      providerName={favorite.name}
+                      isClient={isClient}
+                      isPrestataire={isPrestataire}
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
-                      onClick={() => setLocation(`/messages/${favorite.id}`)}
-                    >
-                      <MessageCircle className="w-4 h-4 mr-2" />
-                      Message
-                    </Button>
+                    />
                     <Button 
                       size="sm" 
                       className="flex-1"
